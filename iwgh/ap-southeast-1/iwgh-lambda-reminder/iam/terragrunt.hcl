@@ -12,8 +12,12 @@ locals {
 }
 
 inputs = {
-    name = "exeandtaskrole"
+    name = "subscription"
     project_name = local.project_name
+    policy_service_list = [
+        "cloudwatch", 
+        "secretsmanager"
+    ]
     aws_managed_policy_arns = [
         "arn:aws:iam::aws:policy/AWSLambdaBasicExecutionRole"
     ]   
