@@ -16,7 +16,7 @@ locals {
 }
 
 inputs = {
-    name = "lambda-pipeline"
+    name = "lambda-update"
     project_name = local.project_name
     #Permissions
     aws_managed_policy_arns = [
