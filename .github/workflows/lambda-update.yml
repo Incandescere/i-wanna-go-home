@@ -2,7 +2,7 @@ name: Lambda update
 
 on: 
   push:
-    branches: ["lambda"]
+    branches: ["main"]
 
 jobs:
   aws: 
