@@ -24,7 +24,7 @@ jobs:
       - name: Check if reminder file updated
         id: check_reminder_changed
         run: |
-          if git diff --name-only HEAD~1 HEAD | grep -q '^iwgh/ap-southeast-1/iwgh-lambda-reminder/lambda/'; then
+          if git diff --name-only HEAD~1 HEAD | grep -q '^iwgh/ap-southeast-1/iwgh-lambda-reminder/lambda/src'; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
@@ -33,7 +33,7 @@ jobs:
       - name: Update Reminder Lambda
         if: steps.check_reminder_changed.outputs.changed == 'true'
         run: |
-          cd iwgh/ap-southeast-1/iwgh-lambda-reminder/lambda
+          cd iwgh/ap-southeast-1/iwgh-lambda-reminder/lambda/src
           zip -r iwgh-lambda-reminders.zip .
           aws lambda update-function-code \
             --function-name iwgh-lambda-reminders \
@@ -42,7 +42,7 @@ jobs:
       - name: Check if subscription file updated
         id: check_subscription_changed
         run: |
-          if git diff --name-only HEAD~1 HEAD | grep -q '^iwgh/ap-southeast-1/iwgh-lambda-subscription/lambda/'; then
+          if git diff --name-only HEAD~1 HEAD | grep -q '^iwgh/ap-southeast-1/iwgh-lambda-subscription/lambda/src'; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
@@ -51,7 +51,7 @@ jobs:
       - name: Update Subscription Lambda
         if: steps.check_subscription_changed.outputs.changed == 'true'
         run: |
-          cd iwgh/ap-southeast-1/iwgh-lambda-subscription/lambda
+          cd iwgh/ap-southeast-1/iwgh-lambda-subscription/lambda/src
           zip -r iwgh-lambda-subscription.zip .
           aws lambda update-function-code \
             --function-name iwgh-lambda-subscription \
