@@ -19,6 +19,6 @@ inputs = {
         "secretsmanager"
     ]
     aws_managed_policy_arns = [
-        "arn:aws:iam::aws:policy/AWSLambdaBasicExecutionRole"
+        "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
     ]   
 }

@@ -7,6 +7,7 @@ on:
 jobs:
   aws: 
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -28,8 +29,6 @@ jobs:
           else
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
-        outputs:
-          changed: ${{ steps.check_reminder_changed.outputs.changed }}
 
       - name: Update Reminder Lambda
         if: steps.check_reminder_changed.outputs.changed == 'true'
@@ -48,8 +47,6 @@ jobs:
           else
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
-        outputs:
-          changed: ${{ steps.check_subscription_changed.outputs.changed }}
 
       - name: Update Subscription Lambda
         if: steps.check_subscription_changed.outputs.changed == 'true'
@@ -58,4 +55,4 @@ jobs:
           zip -r iwgh-lambda-subscription.zip .
           aws lambda update-function-code \
             --function-name iwgh-lambda-subscription \
-            --zip-file fileb://iwgh-lambda-subscription.
+            --zip-file fileb://iwgh-lambda-subscription.zip

@@ -12,13 +12,13 @@ locals {
 }
 
 inputs = {
-    name = "subscription"
+    name = "reminder"
     project_name = local.project_name
     policy_service_list = [
         "cloudwatch", 
         "secretsmanager"
     ]
     aws_managed_policy_arns = [
-        "arn:aws:iam::aws:policy/AWSLambdaBasicExecutionRole"
+        "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
     ]   
 }
