@@ -1,6 +1,7 @@
 terraform{
     # source = "git@github.com:Incandescere/iac-modules.git//lambda"
-    source = "C:/Users/bryan/Desktop/dev/iac-modules/lambda"
+    # source = "C:/Users/bryan/Desktop/dev/iac-modules/lambda"
+    source = "../../../../../iac-modules/lambda"
 }
 
 include "root" {
@@ -20,9 +21,6 @@ inputs = {
     name = "reminder"
     project_name = local.project_name
     execution_role_arn = dependency.exe_role.outputs.arn
-    filename = "test.zip"
-    handler = "test.test"
-    env_vars = {
-        "key": "value"
-    }
+    filename = "reminder.zip"
+    handler = "reminder.handler"
 }

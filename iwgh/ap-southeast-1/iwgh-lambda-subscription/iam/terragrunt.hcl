@@ -21,7 +21,8 @@ inputs = {
         "cloudwatch:*", 
         "secretsmanager:GetSecretValue",
         "secretsmanager:DescribeSecret",
-        "events:*"
+        "scheduler:*",
+        "iam:passRole"
     ]
     aws_managed_policy_arns = [
         "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
