@@ -1,31 +1,46 @@
-name: Test GitHub OIDC -> AWS Role
+name: Print OIDC sub
 
 on:
-  workflow_dispatch: # Run manually
+  workflow_dispatch:
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  test-oidc:
-    environment: iwgh
+  print-sub:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Debug role ARN
-        run: echo "AWS_ROLE_ARN=${{ vars.OIDC_IAM_ROLE_ARN }}"
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Request OIDC token
+        id: oidc
+        uses: actions/github-script@v6
         with:
-          role-to-assume: ${{ vars.OIDC_IAM_ROLE_ARN }}
-          aws-region: ap-southeast-1
+          script: |
+            const token = await github.actions.getOIDCToken();
+            return token
+        result-encoding: string
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify AWS identity
+      - name: Decode and print sub
         run: |
-          echo "Checking assumed role identity..."
-          aws sts get-caller-identity
+          TOKEN="${{ steps.oidc.outputs.result }}"
+
+          # Extract the payload (second part of JWT)
+          PAYLOAD=$(echo $TOKEN | cut -d '.' -f2)
+
+          # Convert URL-safe base64 to standard base64
+          PAYLOAD=$(echo $PAYLOAD | tr '_-' '/+')
+
+          # Add padding for base64 decoding
+          MOD=$((${#PAYLOAD} % 4))
+          if [ $MOD -eq 2 ]; then PAYLOAD="${PAYLOAD}=="; fi
+          if [ $MOD -eq 3 ]; then PAYLOAD="${PAYLOAD}="; fi
+          if [ $MOD -eq 1 ]; then PAYLOAD="${PAYLOAD}==="; fi
+
+          # Decode and print only the sub claim
+          echo $PAYLOAD | base64 --decode | jq -r '.sub'
