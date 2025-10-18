@@ -7,9 +7,6 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  OIDC_IAM_ROLE_ARN: "arn:aws:iam::690695877407:role/iam-role-iwgh-lambda-update"
-
 jobs:
   get-oidc-token:
     runs-on: ubuntu-latest
@@ -21,7 +18,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: $OIDC_IAM_ROLE_ARN
+          role-to-assume: ${{ vars.OIDC_IAM_ROLE_ARN }}
           aws-region: us-east-1
           role-session-name: github-actions
 
