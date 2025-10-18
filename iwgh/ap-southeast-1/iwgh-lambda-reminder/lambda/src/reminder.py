@@ -1,2 +1,2 @@
 def handler(event, context):
-    print("updatenumber2")
+    print("update2")
