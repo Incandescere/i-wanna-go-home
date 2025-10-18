@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 env:
-  OIDC_IAM_ROLE_ARN: arn:aws:iam::690695877407:role/iam-role-iwgh-lambda-update
+  OIDC_IAM_ROLE_ARN: "arn:aws:iam::690695877407:role/iam-role-iwgh-lambda-update"
 
 jobs:
   get-oidc-token:
