@@ -1,2 +1,2 @@
 def handler(event, context):
-    print("updatelambdasuccess")
+    print("updatenumber2")
