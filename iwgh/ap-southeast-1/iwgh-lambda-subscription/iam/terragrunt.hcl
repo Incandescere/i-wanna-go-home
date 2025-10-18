@@ -1,5 +1,5 @@
 terraform{
-    source = "git@github.com:Incandescere/iac-modules.git//iam"
+    source = "git@github.com:Incandescere/iac-modules.git//iam-role"
 }
 
 include "root" {
@@ -14,11 +14,22 @@ locals {
 inputs = {
     name = "subscription"
     project_name = local.project_name
+
+    #Permissions 
+    #Logging, get secrets, creating eventbridge rules
     policy_service_list = [
-        "cloudwatch", 
-        "secretsmanager"
+        "cloudwatch:*", 
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret",
+        "scheduler:*",
+        "iam:passRole"
     ]
     aws_managed_policy_arns = [
         "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-    ]   
+    ]
+
+    # Allow lambda to assume this role
+    services_assuming_role = [
+        "lambda.amazonaws.com"
+    ]
 }

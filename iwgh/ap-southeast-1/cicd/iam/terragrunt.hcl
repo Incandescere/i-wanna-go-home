@@ -18,16 +18,17 @@ locals {
 inputs = {
     name = "lambda-update"
     project_name = local.project_name
+
     #Permissions
     aws_managed_policy_arns = [
         "arn:aws:iam::aws:policy/SecretsManagerReadWrite",
         "arn:aws:iam::aws:policy/AWSLambda_FullAccess"
     ]
 
-    #Assume role policy
+    #Allow OIDC IDP to assume this role
     oidc_assuming_role = [{
         provider_arn = dependency.oidc_idp.outputs.arn
         repo = "Incandescere/i-wanna-go-home"
-        branch = "lambda"
+        branch = "main"
     }]
 }
