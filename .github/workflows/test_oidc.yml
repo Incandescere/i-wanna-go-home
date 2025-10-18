@@ -20,22 +20,17 @@ jobs:
         run: echo "AWS_ROLE_ARN=${{ vars.OIDC_IAM_ROLE_ARN }}"
 
 
-      - name: Configure AWS credentials (OIDC)
+      - name: Get OIDC token
+        id: get-token
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.OIDC_IAM_ROLE_ARN }}   # Full role ARN
-          aws-region: ap-southeast-1
+            role-to-assume: ${{ vars.OIDC_IAM_ROLE_ARN }}
+            aws-region: ap-southeast-1
+            output-env-credentials: true
 
-        
-      - name: Verify AWS identity
+      - name: Print OIDC sub
         run: |
-          echo "Checking assumed role identity..."
-          aws sts get-caller-identity
-
-
-      - name: Decode OIDC token and print sub
-        run: |
-            TOKEN=$ACTIONS_ID_TOKEN_REQUEST_TOKEN
+            TOKEN="${{ steps.get-token.outputs.id_token }}"
 
             # Extract the payload (second part of JWT)
             PAYLOAD=$(echo $TOKEN | cut -d '.' -f2)
