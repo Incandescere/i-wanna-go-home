@@ -30,6 +30,6 @@ inputs = {
     oidc_assuming_role = [{
         provider_arn = dependency.oidc_idp.outputs.arn
         repo = "Incandescere/i-wanna-go-home"
-        branch = "environment:iwgh:*" //TODO: revert to "main"
+        branch = "infra"
     }]
 }
