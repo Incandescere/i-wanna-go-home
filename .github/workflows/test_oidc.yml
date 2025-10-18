@@ -16,6 +16,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Debug OIDC
+        run: |
+            echo "AWS_ROLE_ARN=${{ vars.OIDC_IAM_ROLE_ARN }}"
+            aws sts get-caller-identity || echo "Failed to assume role"
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
