@@ -35,16 +35,19 @@ jobs:
 
       - name: Decode OIDC token and print sub
         run: |
-          # Get the OIDC token
-          TOKEN=$ACTIONS_ID_TOKEN_REQUEST_TOKEN
+            TOKEN=$ACTIONS_ID_TOKEN_REQUEST_TOKEN
 
-          # Extract the payload (second part of JWT)
-          PAYLOAD=$(echo $TOKEN | cut -d '.' -f2)
+            # Extract the payload (second part of JWT)
+            PAYLOAD=$(echo $TOKEN | cut -d '.' -f2)
 
-          # Add padding for base64 decoding
-          LEN=$((${#PAYLOAD} % 4))
-          if [ $LEN -eq 2 ]; then PAYLOAD="${PAYLOAD}=="; fi
-          if [ $LEN -eq 3 ]; then PAYLOAD="${PAYLOAD}="; fi
+            # Convert URL-safe base64 to standard base64
+            PAYLOAD=$(echo $PAYLOAD | tr '_-' '/+')
 
-          # Decode and print only 'sub'
-          echo $PAYLOAD | base64 --decode | jq -r '.sub'
+            # Add padding for base64 decoding
+            MOD=$((${#PAYLOAD} % 4))
+            if [ $MOD -eq 2 ]; then PAYLOAD="${PAYLOAD}=="; fi
+            if [ $MOD -eq 3 ]; then PAYLOAD="${PAYLOAD}="; fi
+            if [ $MOD -eq 1 ]; then PAYLOAD="${PAYLOAD}==="; fi
+
+            # Decode and print only 'sub'
+            echo $PAYLOAD | base64 --decode | jq -r '.sub'
