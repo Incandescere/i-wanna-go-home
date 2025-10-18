@@ -40,10 +40,10 @@ jobs:
         if: steps.check_reminder_changed.outputs.changed == 'true'
         run: |
           cd iwgh/ap-southeast-1/iwgh-lambda-reminder/lambda/src
-          zip -r iwgh-lambda-reminders.zip .
+          zip -r lambda-iwgh-reminder.zip .
           aws lambda update-function-code \
-            --function-name iwgh-lambda-reminders \
-            --zip-file fileb://iwgh-lambda-reminders.zip
+            --function-name lambda-iwgh-reminder \
+            --zip-file fileb://lambda-iwgh-reminder.zip
 
       - name: Check if subscription file updated
         id: check_subscription_changed
@@ -58,7 +58,7 @@ jobs:
         if: steps.check_subscription_changed.outputs.changed == 'true'
         run: |
           cd iwgh/ap-southeast-1/iwgh-lambda-subscription/lambda/src
-          zip -r iwgh-lambda-subscription.zip .
+          zip -r lambda-iwgh-subscription.zip .
           aws lambda update-function-code \
-            --function-name iwgh-lambda-subscription \
-            --zip-file fileb://iwgh-lambda-subscription.zip
+            --function-name lambda-iwgh-subscription \
+            --zip-file fileb://lambda-iwgh-subscription.zip
