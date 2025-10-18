@@ -30,7 +30,7 @@ jobs:
       - name: Check if reminder file updated
         id: check_reminder_changed
         run: |
-          if git diff --name-only origin/infra -- iwgh/ap-southeast-1/iwgh-lambda-reminder/lambda/src/ | grep -q .; then
+          if git diff --name-only origin/infra -- iwgh/ap-southeast-1/iwgh-lambda-reminder/lambda/src/; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
@@ -48,7 +48,7 @@ jobs:
       - name: Check if subscription file updated
         id: check_subscription_changed
         run: |
-          if git diff --name-only origin/infra -- iwgh/ap-southeast-1/iwgh-lambda-subscription/lambda/src/ | grep -q .; then
+          if git diff --name-only origin/infra -- iwgh/ap-southeast-1/iwgh-lambda-subscription/lambda/src/; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
