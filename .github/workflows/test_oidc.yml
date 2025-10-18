@@ -21,14 +21,13 @@ jobs:
         with:
           script: |
             const token = await github.actions.getOIDCToken();
-            return token
-        result-encoding: string
+            core.setOutput('token', token);
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Decode and print sub & aud
         run: |
-          TOKEN="${{ steps.oidc.outputs.result }}"
+          TOKEN="${{ steps.oidc.outputs.token }}"
 
           # Extract the payload (second part of JWT)
           PAYLOAD=$(echo $TOKEN | cut -d '.' -f2)
