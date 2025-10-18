@@ -2,7 +2,11 @@ name: Lambda update
 
 on: 
   push:
-    branches: ["main"]
+    branches: ["infra"]
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   aws: 
