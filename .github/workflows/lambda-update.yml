@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   aws:
+    # Need to set env to use env vars
     environment: iwgh
     runs-on: ubuntu-latest
 
