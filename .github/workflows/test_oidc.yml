@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   test-oidc:
+    environment: iwgh
     runs-on: ubuntu-latest
 
     steps:
