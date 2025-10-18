@@ -1,4 +1,4 @@
-name: Print OIDC sub
+name: Print OIDC sub & aud
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  print-sub:
+  print-sub-aud:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,7 +26,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Decode and print sub
+      - name: Decode and print sub & aud
         run: |
           TOKEN="${{ steps.oidc.outputs.result }}"
 
@@ -42,5 +42,5 @@ jobs:
           if [ $MOD -eq 3 ]; then PAYLOAD="${PAYLOAD}="; fi
           if [ $MOD -eq 1 ]; then PAYLOAD="${PAYLOAD}==="; fi
 
-          # Decode and print only the sub claim
-          echo $PAYLOAD | base64 --decode | jq -r '.sub'
+          # Decode and print sub & aud
+          echo $PAYLOAD | base64 --decode | jq -r '"sub: \(.sub)\naud: \(.aud)"'
