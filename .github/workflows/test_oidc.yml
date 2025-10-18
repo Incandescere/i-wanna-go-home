@@ -1,4 +1,4 @@
-name: Print OIDC sub & aud
+name: Test AWS OIDC
 
 on:
   workflow_dispatch:
@@ -8,38 +8,30 @@ permissions:
   contents: read
 
 jobs:
-  print-sub-aud:
+  get-oidc-token:
+    environment: iwgh
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ vars.OIDC_IAM_ROLE_ARN }}
+          aws-region: us-east-1
+          role-session-name: github-actions
 
       - name: Request OIDC token
         id: oidc
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const token = await github.actions.getOIDCToken();
-            core.setOutput('token', token);
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Decode and print sub & aud
         run: |
-          TOKEN="${{ steps.oidc.outputs.token }}"
+          TOKEN=$(curl -s -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL")
+          echo "oidc_token=$TOKEN" >> $GITHUB_OUTPUT
 
-          # Extract the payload (second part of JWT)
-          PAYLOAD=$(echo $TOKEN | cut -d '.' -f2)
-
-          # Convert URL-safe base64 to standard base64
-          PAYLOAD=$(echo $PAYLOAD | tr '_-' '/+')
-
-          # Add padding for base64 decoding
-          MOD=$((${#PAYLOAD} % 4))
-          if [ $MOD -eq 2 ]; then PAYLOAD="${PAYLOAD}=="; fi
-          if [ $MOD -eq 3 ]; then PAYLOAD="${PAYLOAD}="; fi
-          if [ $MOD -eq 1 ]; then PAYLOAD="${PAYLOAD}==="; fi
-
-          # Decode and print sub & aud
-          echo $PAYLOAD | base64 --decode | jq -r '"sub: \(.sub)\naud: \(.aud)"'
+      - name: Decode and print sub and aud
+        run: |
+          OIDC_TOKEN=${{ steps.oidc.outputs.oidc_token }}
+          PAYLOAD=$(echo "$OIDC_TOKEN" | cut -d'.' -f2 | base64 --decode | jq -r '.')
+          echo "sub: $(echo "$PAYLOAD" | jq -r '.sub')"
+          echo "aud: $(echo "$PAYLOAD" | jq -r '.aud')"
