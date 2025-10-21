@@ -46,6 +46,7 @@ def getMongoCollection(secrets):
         print("DB Connection Check Success")
     except Exception as e:
         print(e)
+        raise e
 
     db = client["iwgh-db"]
     return db["iwgh-collection-subscriptions"]
@@ -94,7 +95,7 @@ def handler(event, context):
         headers={"AccountKey": secrets.get("iwgh-lta-datamall-api-key")},
     )
 
-    print(response.json())
+    # print(response.json())
 
     #Get bus arr timings in ISO format
     bus1arr = response.json()["Services"][0]["NextBus"]["EstimatedArrival"]
@@ -133,8 +134,6 @@ def handler(event, context):
     else:
         tgMsg = tgMsgFormat.format(sub['description'], sub['serviceNo'], diff1, bus1time, diff2, bus2time, sub['_id'])
 
-    print(tgMsg)
-
 
     # Other req params
     tgUrl = "https://api.telegram.org/bot{}/sendMessage".format(secrets.get("iwgh-telegram-api-key"))
@@ -142,8 +141,7 @@ def handler(event, context):
 
 
     # Check info
-    print(tgMsg)
-    # print(tgUrl)
+    # print(tgMsg)
     print(tgParams)
 
     requests.post(tgUrl, params = tgParams)
