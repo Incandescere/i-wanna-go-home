@@ -86,7 +86,7 @@ def handler(event, context):
     secrets = getSecrets()
     collection = getMongoCollection(secrets)
     
-    sub = getSubById(event.subId)
+    sub = getSubById(event["subId"])
 
     response = requests.get(
         "https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival",
@@ -101,9 +101,9 @@ def handler(event, context):
     bus2arr = response.json()["Services"][0]["NextBus2"]["EstimatedArrival"]
     bus3arr = response.json()["Services"][0]["NextBus3"]["EstimatedArrival"]
 
-    print(bus1arr)
-    print(bus2arr)
-    print(bus3arr)
+    # print(bus1arr)
+    # print(bus2arr)
+    # print(bus3arr)
 
 
     # Get bus arr timings in HH:mm
@@ -111,9 +111,9 @@ def handler(event, context):
     bus2time = formatTime(bus2arr)
     bus3time = formatTime(bus3arr)
 
-    print(bus1time)
-    print(bus2time)
-    print(bus3time)
+    # print(bus1time)
+    # print(bus2time)
+    # print(bus3time)
 
 
     # Get bus arr timings in mins
@@ -121,9 +121,9 @@ def handler(event, context):
     diff2 = getDiffInMins(bus2arr)
     diff3 = getDiffInMins(bus3arr)
 
-    print(diff1)
-    print(diff2)
-    print(diff3)
+    # print(diff1)
+    # print(diff2)
+    # print(diff3)
 
 
     #Format tele msg
@@ -146,4 +146,4 @@ def handler(event, context):
     # print(tgUrl)
     print(tgParams)
 
-    requests.get(tgUrl, params = tgParams)
+    requests.post(tgUrl, params = tgParams)
