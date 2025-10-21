@@ -66,60 +66,6 @@ def informUnsubscribeSuccess(desc, chatId):
     requests.get(tgUrl, params = tgParams)
 
 # ========================================================================================================
-# Create cron on aws
-def createCron(id, cronExp):
-    # Create cron
-    events.put_rule(
-        Name='iwgh-subscription-'+id,
-        ScheduleExpression='cron({})'.format(cronExp),
-        State='ENABLED',
-        Description='Cron for iwgh subscription '+id
-    )
-    rule_arn = response['RuleArn']
-    # print(f"Rule ARN: {rule_arn}")
-
-    reminder_lambda_arn = os.environ.get('LAMBDA_ARN')
-    # print(f"Reminder Lambda ARN: {reminder_lambda_arn}")
-
-    # Add lambda as target
-    events.put_targets(
-        Rule='iwgh-subscription-'+id,
-        Targets=[
-            {
-                'Id': 'iwgh-reminder-lambda-'+id,
-                'Arn': reminder_lambda_arn,
-                'Input': '{"message": "Hello from EventBridge cron!"}'  # Optional static input
-            }
-        ]
-    )
-
-    # Grant permissions for EB to invoke lambda
-    lambda_client = boto3.client('lambda')
-    lambda_client.add_permission(
-        FunctionName='lambda-iwgh-reminder',
-        StatementId='EventBridgeInvokePermission',
-        Action='lambda:InvokeFunction',
-        Principal='events.amazonaws.com',
-        SourceArn=rule_arn
-    )
-
-# ========================================================================================================
-# Delete cron on aws
-def deleteCron(id):
-    rule_name = 'iwgh-subscription-'+id
-    # print(rule_name)
-
-    # Remove targets
-    target_ids = [t['Id'] for t in targets['Targets']]
-    if target_ids:
-        events.remove_targets(Rule=rule_name, Ids=target_ids)
-        # print(f"Removed targets: {target_ids}")
-
-    # Delete the rule
-    events.delete_rule(Name=rule_name)
-    # print(f"Deleted EventBridge rule: {rule_name}")
-
-# ========================================================================================================
 #Main function
 def handler(event, context):
 # Define helpers first
@@ -152,6 +98,40 @@ def handler(event, context):
 
 # --------------------------------------------------------------------------------------------------------
 
+    def clearUpdates(maxOffset):
+        if maxOffset > 0:
+            requests.get(
+                "https://api.telegram.org/bot{}/getUpdates?offset={}".format(secrets.get("iwgh-telegram-api-key"), maxOffset+1)
+            )
+
+# --------------------------------------------------------------------------------------------------------
+
+    scheduler = boto3.client('scheduler', region_name='ap-southeast-1')
+    def createCron(id, cronExp):
+        # Create cron
+
+        scheduler.create_schedule(
+            Name='iwgh-schedule-subscription-'+id,
+            ScheduleExpression='cron({})'.format(cronExp),
+            FlexibleTimeWindow={'Mode': 'OFF'},
+            Target={
+                'Arn': os.environ['reminderEbTargetArn'],
+                'RoleArn': os.environ['reminderEbTargetRoleArn'],
+                'Input': json.dumps({
+                    'id': id
+                })
+            }
+        )
+
+# --------------------------------------------------------------------------------------------------------
+
+    def deleteCron(id):
+        scheduler.delete_schedule(
+            Name='iwgh-schedule-subscription-'+id
+        )
+
+# --------------------------------------------------------------------------------------------------------
+
     def subscribe(updateId, chatId, subMsgArr):
         subData = {
             "_id": str(updateId),
@@ -170,7 +150,7 @@ def handler(event, context):
                 print("Subscribe: Insert Exception")
                 raise e
             # Creating an eventbridge cron job
-            # createCron(id, cronExp)
+            createCron(str(updateId), subData["cronExp"])
             transaction.commit()
             return True
         except Exception as e:
@@ -189,20 +169,12 @@ def handler(event, context):
                 print(e)
                 raise e
             # Deleting an eventbridge cron job
-            # deleteCron(updateId)
+            deleteCron(id)
             transaction.commit()
             return deletedObject or False
         except Exception as e:
             transaction.abort()
             raise e
-
-# --------------------------------------------------------------------------------------------------------
-
-    def clearUpdates(maxOffset):
-        if maxOffset > 0:
-            requests.get(
-                "https://api.telegram.org/bot{}/getUpdates?offset={}".format(secrets.get("iwgh-telegram-api-key"), maxOffset+1)
-            )
 
 # --------------------------------------------------------------------------------------------------------
 
