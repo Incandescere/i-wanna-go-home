@@ -52,9 +52,8 @@ def getMongoCollection(secrets):
     return db["iwgh-collection-subscriptions"]
 
 # ========================================================================================================
-# Main function called by handler at the bottom
+#Main function
 def handler(event, context):
-
 # Define helpers first
     def getSubById(id):
         try:
