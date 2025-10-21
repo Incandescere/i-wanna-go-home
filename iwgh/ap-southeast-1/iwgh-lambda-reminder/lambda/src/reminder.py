@@ -9,8 +9,80 @@ import boto3
 from botocore.exceptions import ClientError
 import json
 
+
+# Gets secrets from secrets manager
+def getSecrets():
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name='ap-southeast-1'
+    )
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId="iwgh"
+        )
+    except ClientError as e:
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
+    secrets = get_secret_value_response['SecretString']
+    return json.loads(secrets)
+
+# ========================================================================================================
+# Connects to mongodb atlas client
+def getMongoCollection(secrets):
+    # Establish mongodb atlas connection
+    dbUser = secrets.get("iwgh-mongo-db-username")
+    dbPass = secrets.get("iwgh-mongo-db-password")
+    uri = secrets.get("iwgh-mongo-conn-string").format(dbUser, dbPass)
+
+    # Create a new client and connect to the server
+    client = MongoClient(uri, server_api=ServerApi('1'))
+
+    # Send a ping to confirm a successful connection
+    try:
+        client.admin.command('ping')
+        print("DB Connection Check Success")
+    except Exception as e:
+        print(e)
+
+    db = client["iwgh-db"]
+    return db["iwgh-collection-subscriptions"]
+
+# ========================================================================================================
 # Main function called by handler at the bottom
-def main(event, context):
+def handler(event, context):
+
+# Define helpers first
+    def getSubById(id):
+        try:
+            result = collection.find_one({"_id": id})
+            return result
+        except Exception as e:
+            print("getSubById: Get Exception")
+            raise e
+
+# --------------------------------------------------------------------------------------------------------
+    
+    def formatTime(time):
+        return datetime.fromisoformat(time).strftime("%H:%M")
+
+# --------------------------------------------------------------------------------------------------------
+    
+    def getDiffInMins(time):
+        tz = timezone(timedelta(hours=8))
+        delta = datetime.fromisoformat(time)-datetime.now(tz)
+        if (delta.days < 0):
+            return False
+
+        if (floor(delta.seconds/60)) <= 0:
+            return "< 1"
+        else:
+            return str(floor(delta.seconds/60))
+
+# --------------------------------------------------------------------------------------------------------
+    #Main function start
     secrets = getSecrets()
     collection = getMongoCollection(secrets)
     
@@ -75,77 +147,3 @@ def main(event, context):
     print(tgParams)
 
     requests.get(tgUrl, params = tgParams)
-
-# --------------------------------------------------------------------------------------------------------
-
-    def getSubById(id):
-        try:
-            result = collection.find_one({"_id": id})
-            return result
-        except Exception as e:
-            print("getSubById: Get Exception")
-            raise e
-
-# --------------------------------------------------------------------------------------------------------
-    
-    def formatTime(time):
-        return datetime.fromisoformat(time).strftime("%H:%M")
-
-# --------------------------------------------------------------------------------------------------------
-    
-    def getDiffInMins(time):
-        tz = timezone(timedelta(hours=8))
-        delta = datetime.fromisoformat(time)-datetime.now(tz)
-        if (delta.days < 0):
-            return False
-
-        if (floor(delta.seconds/60)) <= 0:
-            return "< 1"
-        else:
-            return str(floor(delta.seconds/60))
-
-# ========================================================================================================
-# Gets "iwgh" secrets from secrets manager
-def getSecrets():
-    # Create a Secrets Manager client
-    session = boto3.session.Session()
-    client = session.client(
-        service_name='secretsmanager',
-        region_name='ap-southeast-1'
-    )
-    try:
-        get_secret_value_response = client.get_secret_value(
-            SecretId="iwgh"
-        )
-    except ClientError as e:
-        # For a list of exceptions thrown, see
-        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-        raise e
-    secrets = get_secret_value_response['SecretString']
-    return json.loads(secrets)
-
-# ========================================================================================================
-# Connects to mongodb atlas client
-def getMongoCollection(secrets):
-    # Establish mongodb atlas connection
-    dbUser = secrets.get("iwgh-mongo-db-username")
-    dbPass = secrets.get("iwgh-mongo-db-password")
-    uri = secrets.get("iwgh-mongo-conn-string").format(dbUser, dbPass)
-
-    # Create a new client and connect to the server
-    client = MongoClient(uri, server_api=ServerApi('1'))
-
-    # Send a ping to confirm a successful connection
-    try:
-        client.admin.command('ping')
-        print("DB Connection Check Success")
-    except Exception as e:
-        print(e)
-
-    db = client["iwgh-db"]
-    return db["iwgh-collection-subscriptions"]
-
-# ========================================================================================================
-
-def handler(event, context):
-    main(event, context)
