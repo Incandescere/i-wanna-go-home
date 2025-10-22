@@ -1,6 +1,6 @@
 terraform{
-    # source = "git@github.com:Incandescere/iac-modules.git//s3"
-    source = "C:/Users/bryan/Desktop/dev/iac-modules/lambda-layer"
+    source = "git@github.com:Incandescere/iac-modules.git//lambda-layer"
+    # source = "C:/Users/bryan/Desktop/dev/iac-modules/lambda-layer"
 }
 
 include "root" {
@@ -21,5 +21,6 @@ inputs = {
     project_name = local.project_name
     name = "deps"
     bucket_name = dependency.s3.outputs.id
-    zipfile_path = "iwgh-lambda-layer-deps.zip"
+    # zip file should be built in linux env 
+    zipfile_path = "iwgh-lambda-layer.zip"
 }
