@@ -87,10 +87,10 @@ def handler(event, context):
 
     def clearUpdates(maxOffset):
         if maxOffset > 0:
-            requests.get(
+            response = requests.post(
                 "https://api.telegram.org/bot{}/getUpdates?offset={}".format(secrets.get("iwgh-telegram-api-key"), maxOffset+1)
             )
-        print("ClearUpdatesSuccess")
+        print("ClearUpdatesSuccess {}".format(maxOffset) if response.status_code==200 else "ClearUpdatesFailed")
 
 # --------------------------------------------------------------------------------------------------------
 
