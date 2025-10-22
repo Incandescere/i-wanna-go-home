@@ -226,7 +226,6 @@ def handler(event, context):
             print("Try subscribe flow...")
             try:
                 subscribeResult = subscribe(updateId, chatId, subMsgArr)
-                print("Subscription created: {}"),format(subscribeResult)
                 if subscribeResult:
                     informSubscribeSuccess(updateId, chatId, subMsgArr)
             except Exception as e:
@@ -237,9 +236,7 @@ def handler(event, context):
         if unsubSubscribed and validUnsubMsg:
             print("Try unsubscribe flow...")
             try:
-                print(subMsgArr)
                 unsubscribeResult = unsubscribe(subMsgArr[1])
-                print(unsubscribeResult)
                 if unsubscribeResult != False:
                     informUnsubscribeSuccess(unsubscribeResult["description"], chatId)
 

@@ -141,7 +141,7 @@ def handler(event, context):
 
 
     # Check info
-    # print(tgMsg)
+    print("Sending message: {}".format(tgMsg))
     # print(tgParams)
-
-    requests.post(tgUrl, params = tgParams)
+    response = requests.post(tgUrl, params = tgParams)
+    print("Reminder sent successfully" if response.status_code==200 else "Reminder sending failed")
