@@ -59,7 +59,7 @@ def handler(event, context):
         response = requests.get(
             "https://api.telegram.org/bot{}/getUpdates".format(secrets.get("iwgh-telegram-api-key"))
         )
-        print("GetUpdateList: {}").format(len(response))
+        print("GetUpdateList: {}".format(len(response.json()["result"])))
         return response.json()["result"]
 
 # --------------------------------------------------------------------------------------------------------
