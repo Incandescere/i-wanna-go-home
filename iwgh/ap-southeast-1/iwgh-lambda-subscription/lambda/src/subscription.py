@@ -24,6 +24,7 @@ def getSecrets():
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
         raise e
     secrets = get_secret_value_response['SecretString']
+    print("GetSecrets ok" if len(secrets)>0 else "GetSecrets failed")
     return json.loads(secrets)
 
 # ========================================================================================================
@@ -49,23 +50,7 @@ def getMongoCollection(secrets):
     return db["iwgh-collection-subscriptions"]
 
 # ========================================================================================================
-# Inform sub/unsub success fn
-def informSubscribeSuccess(updateId, chatId, subMsgArr):
-    tgMsg = """
-    Subscription for {} successful!\nBus {} at stop {}\n\nTo Unsub, send 'Unsub, {}'""".format(subMsgArr[0], subMsgArr[2], subMsgArr[1], updateId)
-    print(tgMsg)
-    tgUrl = "https://api.telegram.org/bot{}/sendMessage".format(secrets.get("iwgh-telegram-api-key"))
-    tgParams = {"chat_id": chatId, "text": tgMsg}
-    requests.get(tgUrl, params = tgParams)
 
-def informUnsubscribeSuccess(desc, chatId):
-    tgMsg = "Successfully unsubscribed from \"{}\"".format(desc)
-    print(tgMsg)
-    tgUrl = "https://api.telegram.org/bot{}/sendMessage".format(secrets.get("iwgh-telegram-api-key"))
-    tgParams = {"chat_id": chatId, "text": tgMsg}
-    requests.get(tgUrl, params = tgParams)
-
-# ========================================================================================================
 #Main function
 def handler(event, context):
 # Define helpers first
@@ -74,6 +59,7 @@ def handler(event, context):
         response = requests.get(
             "https://api.telegram.org/bot{}/getUpdates".format(secrets.get("iwgh-telegram-api-key"))
         )
+        print("GetUpdateList: {}").format(len(result))
         return response.json()["result"]
 
 # --------------------------------------------------------------------------------------------------------
@@ -91,6 +77,7 @@ def handler(event, context):
     def dbDelete(id):
         try:
             result = collection.find_one_and_delete({"_id": id})
+            print(result)
             return result if result is not None else False
         except Exception as e:
             print("dbDelete: Delete Exception")
@@ -103,25 +90,26 @@ def handler(event, context):
             requests.get(
                 "https://api.telegram.org/bot{}/getUpdates?offset={}".format(secrets.get("iwgh-telegram-api-key"), maxOffset+1)
             )
+        print("ClearUpdatesSuccess")
 
 # --------------------------------------------------------------------------------------------------------
 
     scheduler = boto3.client('scheduler', region_name='ap-southeast-1')
     def createCron(id, cronExp):
-        # Create cron
-
         scheduler.create_schedule(
             Name='iwgh-schedule-subscription-'+id,
             ScheduleExpression='cron({})'.format(cronExp),
+            ScheduleExpressionTimezone='Asia/Singapore',
             FlexibleTimeWindow={'Mode': 'OFF'},
             Target={
                 'Arn': os.environ['reminderEbTargetArn'],
                 'RoleArn': os.environ['reminderEbTargetRoleArn'],
                 'Input': json.dumps({
-                    'id': id
+                    'subId': id
                 })
             }
         )
+        print("CreateCron success")
 
 # --------------------------------------------------------------------------------------------------------
 
@@ -129,6 +117,7 @@ def handler(event, context):
         scheduler.delete_schedule(
             Name='iwgh-schedule-subscription-'+id
         )
+        print("DeleteCron success")
 
 # --------------------------------------------------------------------------------------------------------
 
@@ -152,6 +141,7 @@ def handler(event, context):
             # Creating an eventbridge cron job
             createCron(str(updateId), subData["cronExp"])
             transaction.commit()
+            print("SubscribeSucess")
             return True
         except Exception as e:
             transaction.abort()
@@ -171,6 +161,7 @@ def handler(event, context):
             # Deleting an eventbridge cron job
             deleteCron(id)
             transaction.commit()
+            print("UnsubscribeSuccess")
             return deletedObject or False
         except Exception as e:
             transaction.abort()
@@ -178,6 +169,28 @@ def handler(event, context):
 
 # --------------------------------------------------------------------------------------------------------
 
+    # Inform sub/unsub success fn
+    def informSubscribeSuccess(updateId, chatId, subMsgArr):
+        tgMsg = """
+        Subscription for {} successful!\nBus {} at stop {}\n\nTo Unsub, send 'Unsub, {}'""".format(subMsgArr[0], subMsgArr[2], subMsgArr[1], updateId)
+        print(tgMsg)
+        tgUrl = "https://api.telegram.org/bot{}/sendMessage".format(secrets.get("iwgh-telegram-api-key"))
+        tgParams = {"chat_id": chatId, "text": tgMsg}
+        response = requests.post(tgUrl, params = tgParams)
+        print("InformSubscribeSuccess ok" if response.status_code ==200 else "InformSubscribeSuccess failed")
+
+    def informUnsubscribeSuccess(desc, chatId):
+        tgMsg = "Successfully unsubscribed from \"{}\"".format(desc)
+        print(tgMsg)
+        tgUrl = "https://api.telegram.org/bot{}/sendMessage".format(secrets.get("iwgh-telegram-api-key"))
+        tgParams = {"chat_id": chatId, "text": tgMsg}
+        response = requests.post(tgUrl, params = tgParams)
+        print("InformSubscribeSuccess ok" if response.status_code ==200 else "InformSubscribeSuccess failed")
+
+# --------------------------------------------------------------------------------------------------------
+
+    secrets = getSecrets()
+    collection = getMongoCollection(secrets)
     #Get list of updates from tele
     updateList = getUpdateList()
     maxOffset = 0
@@ -213,11 +226,12 @@ def handler(event, context):
             print("Try subscribe flow...")
             try:
                 subscribeResult = subscribe(updateId, chatId, subMsgArr)
-                print(subscribeResult)
+                print("Subscription created: {}"),format(subscribeResult)
                 if subscribeResult:
                     informSubscribeSuccess(updateId, chatId, subMsgArr)
             except Exception as e:
                 print("Subscribe flow failed")
+                print(e)
 
         # Unsubscribe Flow
         if unsubSubscribed and validUnsubMsg:
@@ -228,8 +242,10 @@ def handler(event, context):
                 print(unsubscribeResult)
                 if unsubscribeResult != False:
                     informUnsubscribeSuccess(unsubscribeResult["description"], chatId)
+
             except Exception as e:
                 print("Unsubscribe flow failed")
+                print(e)
 
         print("=================================================")
     

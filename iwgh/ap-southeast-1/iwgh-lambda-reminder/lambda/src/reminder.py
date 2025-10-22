@@ -27,6 +27,7 @@ def getSecrets():
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
         raise e
     secrets = get_secret_value_response['SecretString']
+    print("GetSecrets ok" if len(secrets)>0 else "GetSecrets failed")
     return json.loads(secrets)
 
 # ========================================================================================================
@@ -141,6 +142,6 @@ def handler(event, context):
 
     # Check info
     # print(tgMsg)
-    print(tgParams)
+    # print(tgParams)
 
     requests.post(tgUrl, params = tgParams)
