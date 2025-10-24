@@ -54,14 +54,15 @@ def getMongoCollection(secrets):
 #Main function
 def handler(event, context):
 # Define helpers first
+
     # Get update list from bot link
     def getUpdateList():
         response = requests.get(
             "https://api.telegram.org/bot{}/getUpdates".format(secrets.get("iwgh-telegram-api-key"))
         )
-        print("GetUpdateList: {}".format(len(response.json()["result"])))
-        return response.json()["result"]
-
+        updateListLen = len(response.json()["result"])
+        print("GetUpdateList: {}".format(updateListLen))
+        return response.json()["result"] if updateListLen > 0 else None
 # --------------------------------------------------------------------------------------------------------
 
     def dbInsert(subData):
@@ -188,11 +189,14 @@ def handler(event, context):
         print("InformSubscribeSuccess ok" if response.status_code ==200 else "InformSubscribeSuccess failed")
 
 # --------------------------------------------------------------------------------------------------------
+    #Get list of updates from tele
+    updateList = getUpdateList()
+    if updateList is None:
+        return
 
     secrets = getSecrets()
     collection = getMongoCollection(secrets)
-    #Get list of updates from tele
-    updateList = getUpdateList()
+
     maxOffset = 0
     for listItem in updateList:
         updateId = listItem["update_id"]
