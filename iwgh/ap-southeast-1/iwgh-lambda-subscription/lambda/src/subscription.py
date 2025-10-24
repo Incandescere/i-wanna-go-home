@@ -190,11 +190,12 @@ def handler(event, context):
 
 # --------------------------------------------------------------------------------------------------------
     #Get list of updates from tele
+    secrets = getSecrets()
+
     updateList = getUpdateList()
     if updateList is None:
         return
-
-    secrets = getSecrets()
+    
     collection = getMongoCollection(secrets)
 
     maxOffset = 0
