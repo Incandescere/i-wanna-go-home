@@ -76,6 +76,7 @@ def handler(event, context):
         updateListLen = len(response.json()["result"])
         print("GetUpdateList: {}".format(updateListLen))
         return response.json()["result"] if updateListLen > 0 else None
+
 # --------------------------------------------------------------------------------------------------------
 
     def dbInsert(subData):
