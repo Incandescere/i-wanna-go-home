@@ -50,7 +50,20 @@ def getMongoCollection(secrets):
     return db["iwgh-collection-subscriptions"]
 
 # ========================================================================================================
+# Convert text to cron exp
+def textToCron(time,days):
+    time = time.strip() 
+    days = days.strip().upper()
 
+    hr = int(time[:2])
+    min = int(time[-2:])
+    if len(time) != 4 or (hr<0 or hr>23) or (min<0 or min>59):
+        return False
+
+    cronExp = "{} {} ? * {} *".format(min, hr, days)
+    return cronExp
+
+# ========================================================================================================
 #Main function
 def handler(event, context):
 # Define helpers first
@@ -122,13 +135,14 @@ def handler(event, context):
 # --------------------------------------------------------------------------------------------------------
 
     def subscribe(updateId, chatId, subMsgArr):
+        cronExp = textToCron(submsgarr[3], submsgarr[4])
         subData = {
             "_id": str(updateId),
             "description": subMsgArr[0],
             "busStopCode": subMsgArr[1],
             "serviceNo": subMsgArr[2],
             "chatId": str(chatId),
-            "cronExp": subMsgArr[3]
+            "cronExp": cronExp
         }
         # Insert into db
         try:
@@ -202,7 +216,7 @@ def handler(event, context):
         subMsgArr = [x.strip() for x in subMsgArr]
 
         # check if msgs are valid sub/unsub reqs
-        validSubMsg = len(subMsgArr) == 4
+        validSubMsg = len(subMsgArr) == 5
         validUnsubMsg = len(subMsgArr) == 2 and subMsgArr[0] == 'Unsub'
 
         # print()
