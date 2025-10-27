@@ -50,17 +50,32 @@ def getMongoCollection(secrets):
     return db["iwgh-collection-subscriptions"]
 
 # ========================================================================================================
+# Convert text to cron exp
+def textToCron(time,days):
+    time = time.strip() 
+    days = days.strip().upper()
 
+    hr = int(time[:2])
+    min = int(time[-2:])
+    if len(time) != 4 or (hr<0 or hr>23) or (min<0 or min>59):
+        return False
+
+    cronExp = "{} {} ? * {} *".format(min, hr, days)
+    return cronExp
+
+# ========================================================================================================
 #Main function
 def handler(event, context):
 # Define helpers first
+
     # Get update list from bot link
     def getUpdateList():
         response = requests.get(
             "https://api.telegram.org/bot{}/getUpdates".format(secrets.get("iwgh-telegram-api-key"))
         )
-        print("GetUpdateList: {}".format(len(response.json()["result"])))
-        return response.json()["result"]
+        updateListLen = len(response.json()["result"])
+        print("GetUpdateList: {}".format(updateListLen))
+        return response.json()["result"] if updateListLen > 0 else None
 
 # --------------------------------------------------------------------------------------------------------
 
@@ -122,13 +137,14 @@ def handler(event, context):
 # --------------------------------------------------------------------------------------------------------
 
     def subscribe(updateId, chatId, subMsgArr):
+        cronExp = textToCron(submsgarr[3], submsgarr[4])
         subData = {
             "_id": str(updateId),
             "description": subMsgArr[0],
             "busStopCode": subMsgArr[1],
             "serviceNo": subMsgArr[2],
             "chatId": str(chatId),
-            "cronExp": subMsgArr[3]
+            "cronExp": cronExp
         }
         # Insert into db
         try:
@@ -188,11 +204,15 @@ def handler(event, context):
         print("InformSubscribeSuccess ok" if response.status_code ==200 else "InformSubscribeSuccess failed")
 
 # --------------------------------------------------------------------------------------------------------
-
-    secrets = getSecrets()
-    collection = getMongoCollection(secrets)
     #Get list of updates from tele
+    secrets = getSecrets()
+
     updateList = getUpdateList()
+    if updateList is None:
+        return
+    
+    collection = getMongoCollection(secrets)
+
     maxOffset = 0
     for listItem in updateList:
         updateId = listItem["update_id"]
@@ -202,7 +222,7 @@ def handler(event, context):
         subMsgArr = [x.strip() for x in subMsgArr]
 
         # check if msgs are valid sub/unsub reqs
-        validSubMsg = len(subMsgArr) == 4
+        validSubMsg = len(subMsgArr) == 5
         validUnsubMsg = len(subMsgArr) == 2 and subMsgArr[0] == 'Unsub'
 
         # print()
