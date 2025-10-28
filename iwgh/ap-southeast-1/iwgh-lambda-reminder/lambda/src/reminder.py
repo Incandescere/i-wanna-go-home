@@ -115,7 +115,7 @@ def handler(event, context):
             # print(pqObj)
             heapq.heappush(pq, (int(arrivalMins), pqObj))
 
-    print(len(pq)+" bus arrivals")
+    print(str(len(pq))+" bus arrivals")
     #Format message
     tgMsg = "{}".format(sub['description'])
     if len(pq) == 0:
