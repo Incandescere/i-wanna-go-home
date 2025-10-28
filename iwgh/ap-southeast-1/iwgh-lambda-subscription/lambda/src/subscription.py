@@ -139,7 +139,7 @@ def handler(event, context):
     def subscribe(updateId, chatId, subMsgArr):
         cronExp = textToCron(subMsgArr[3], subMsgArr[4])
         # print(cronExp)
-        serviceNos = subMsgArr[2].strip("()").split()
+        serviceNos = subMsgArr[2].split()
         subData = {
             "_id": str(updateId),
             "description": subMsgArr[0],
@@ -189,7 +189,7 @@ def handler(event, context):
 
     # Inform sub/unsub success fn
     def informSubscribeSuccess(updateId, chatId, subMsgArr):
-        tgMsg = "Subscription for {} successful!\nBus {} at stop {}\n\nTo Unsub, send 'Unsub, {}'".format(subMsgArr[0], subMsgArr[2].strip("()"), subMsgArr[1], updateId)
+        tgMsg = "Subscription for {} successful!\nBus(es) {} at stop {}\n\nTo Unsub, send 'Unsub, {}'".format(subMsgArr[0], subMsgArr[2], subMsgArr[1], updateId)
         print(tgMsg)
         tgUrl = "https://api.telegram.org/bot{}/sendMessage".format(secrets.get("iwgh-telegram-api-key"))
         tgParams = {"chat_id": chatId, "text": tgMsg}
