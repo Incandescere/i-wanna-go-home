@@ -8,6 +8,7 @@ import os
 import boto3
 from botocore.exceptions import ClientError
 import json
+import heapq
 
 
 # Gets secrets from secrets manager
@@ -53,6 +54,21 @@ def getMongoCollection(secrets):
     return db["iwgh-collection-subscriptions"]
 
 # ========================================================================================================
+    
+def formatTime(time):
+    return datetime.fromisoformat(time).strftime("%H:%M")
+
+# ========================================================================================================
+
+def getDiffInMins(time):
+    tz = timezone(timedelta(hours=8))
+    delta = datetime.fromisoformat(time)-datetime.now(tz)
+    if (delta.days < 0):
+        return False
+
+    return str(floor(delta.seconds/60))
+
+# ========================================================================================================
 #Main function
 def handler(event, context):
 # Define helpers first
@@ -65,75 +81,55 @@ def handler(event, context):
             raise e
 
 # --------------------------------------------------------------------------------------------------------
-    
-    def formatTime(time):
-        return datetime.fromisoformat(time).strftime("%H:%M")
-
-# --------------------------------------------------------------------------------------------------------
-    
-    def getDiffInMins(time):
-        tz = timezone(timedelta(hours=8))
-        delta = datetime.fromisoformat(time)-datetime.now(tz)
-        if (delta.days < 0):
-            return False
-
-        if (floor(delta.seconds/60)) <= 0:
-            return "< 1"
-        else:
-            return str(floor(delta.seconds/60))
-
-# --------------------------------------------------------------------------------------------------------
     #Main function start
     secrets = getSecrets()
     collection = getMongoCollection(secrets)
     
     sub = getSubById(event["subId"])
 
-    response = requests.get(
-        "https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival",
-        params={"BusStopCode": sub['busStopCode'], "ServiceNo": sub['serviceNo']},
-        headers={"AccountKey": secrets.get("iwgh-lta-datamall-api-key")},
-    )
+    pq = []
+    busIndex = ["NextBus", "NextBus2", "NextBus3"]
+    #Get next 3 busses for all specified services
+    for service in sub["serviceNos"]:
+        response = requests.get(
+            "https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival",
+            params={"BusStopCode": sub['busStopCode'], "ServiceNo": service},
+            headers={"AccountKey": userdata.get('LtaDatamall')},
+        )
+        for i in busIndex: 
+            busArr = response.json()["Services"][0][i]["EstimatedArrival"]
+            # case where there is empty bus time
+            if not busArr:
+                continue
 
-    # print(response.json())
+            arrivalTime = formatTime(busArr)
+            arrivalMins = getDiffInMins(busArr)
+            # case where time is before curr time
+            if not arrivalMins:
+                continue
+            pqObj = {
+                "busService": service,
+                "arrivalTime": arrivalTime, 
+                "arrivalMins": arrivalMins
+            }
+            # print(pqObj)
+            heapq.heappush(pq, (int(arrivalMins), pqObj))
 
-    #Get bus arr timings in ISO format
-    bus1arr = response.json()["Services"][0]["NextBus"]["EstimatedArrival"]
-    bus2arr = response.json()["Services"][0]["NextBus2"]["EstimatedArrival"]
-    bus3arr = response.json()["Services"][0]["NextBus3"]["EstimatedArrival"]
-
-    # print(bus1arr)
-    # print(bus2arr)
-    # print(bus3arr)
-
-
-    # Get bus arr timings in HH:mm
-    bus1time = formatTime(bus1arr)
-    bus2time = formatTime(bus2arr)
-    bus3time = formatTime(bus3arr)
-
-    # print(bus1time)
-    # print(bus2time)
-    # print(bus3time)
-
-
-    # Get bus arr timings in mins
-    diff1 = getDiffInMins(bus1arr)
-    diff2 = getDiffInMins(bus2arr)
-    diff3 = getDiffInMins(bus3arr)
-
-    # print(diff1)
-    # print(diff2)
-    # print(diff3)
-
-
-    #Format tele msg
-    tgMsgFormat = "{}:\nBus {} arriving in {} min(s) [{}], and then in {} min(s) [{}]\nTo unsubscribe, text 'Unsub, {}'"
-    if not diff1:
-        tgMsg = tgMsgFormat.format(sub['description'], sub['serviceNo'], diff2, bus2time, diff3, bus3time, sub['_id'])
-    else:
-        tgMsg = tgMsgFormat.format(sub['description'], sub['serviceNo'], diff1, bus1time, diff2, bus2time, sub['_id'])
-
+    print(len(pq)+" bus arrivals")
+    #Format message
+    tgMsg = "{}".format(sub['description'])
+    if len(pq) == 0:
+        tgMsg = "No more busses"
+    else: 
+        for i in range(5):
+            nextBus = heapq.heappop(pq)
+            arrivalMins = nextBus[1]["arrivalMins"] if int(nextBus[1]["arrivalMins"]) > 0 else "< 1"
+            line = "{} coming in {} mins ({})".format(nextBus[1]["busService"], arrivalMins, nextBus[1]["arrivalTime"])
+            tgMsg = tgMsg + "\n" + line
+            if len(pq) == 0:
+                break
+        
+    tgMsg += "\n\nSend \"Unsub, {}\" to unsubscribe".format(sub['_id'])
 
     # Other req params
     tgUrl = "https://api.telegram.org/bot{}/sendMessage".format(secrets.get("iwgh-telegram-api-key"))

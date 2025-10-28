@@ -138,11 +138,13 @@ def handler(event, context):
 
     def subscribe(updateId, chatId, subMsgArr):
         cronExp = textToCron(subMsgArr[3], subMsgArr[4])
+        # print(cronExp)
+        serviceNos = subMsgArr[2].strip("()").split()
         subData = {
             "_id": str(updateId),
             "description": subMsgArr[0],
             "busStopCode": subMsgArr[1],
-            "serviceNo": subMsgArr[2],
+            "serviceNos": serviceNos,
             "chatId": str(chatId),
             "cronExp": cronExp
         }
@@ -155,7 +157,7 @@ def handler(event, context):
                 print("Subscribe: Insert Exception")
                 raise e
             # Creating an eventbridge cron job
-            createCron(str(updateId), subData["cronExp"])
+            # createCron(str(updateId), subData["cronExp"])
             transaction.commit()
             print("SubscribeSucess")
             return True
@@ -187,8 +189,7 @@ def handler(event, context):
 
     # Inform sub/unsub success fn
     def informSubscribeSuccess(updateId, chatId, subMsgArr):
-        tgMsg = """
-        Subscription for {} successful!\nBus {} at stop {}\n\nTo Unsub, send 'Unsub, {}'""".format(subMsgArr[0], subMsgArr[2], subMsgArr[1], updateId)
+        tgMsg = "Subscription for {} successful!\nBus {} at stop {}\n\nTo Unsub, send 'Unsub, {}'".format(subMsgArr[0], subMsgArr[2].strip("()"), subMsgArr[1], updateId)
         print(tgMsg)
         tgUrl = "https://api.telegram.org/bot{}/sendMessage".format(secrets.get("iwgh-telegram-api-key"))
         tgParams = {"chat_id": chatId, "text": tgMsg}
@@ -225,10 +226,8 @@ def handler(event, context):
         validSubMsg = len(subMsgArr) == 5
         validUnsubMsg = len(subMsgArr) == 2 and subMsgArr[0] == 'Unsub'
 
-        # print()
-        # print("Curr submsgarr: ")
-        # print(subMsgArr)
-        # print()
+        # print('\n'+"Curr submsgarr: ")
+        # print(subMsgArr+'\n')
 
         # check curr state of sub id
         subscribed = collection.find_one({"_id": updateId}) is not None
