@@ -157,7 +157,7 @@ def handler(event, context):
                 print("Subscribe: Insert Exception")
                 raise e
             # Creating an eventbridge cron job
-            # createCron(str(updateId), subData["cronExp"])
+            createCron(str(updateId), subData["cronExp"])
             transaction.commit()
             print("SubscribeSucess")
             return True
