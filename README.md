@@ -53,35 +53,19 @@ On invocation, the function will:
 
 ## Subscription message
 
-A 4-part comma-separated message
+A 5-part comma-separated message
 
 ```bash
-<description>, <busStopNo>, <busServiceNo>, <cronExp>
+<description>, <busStopNo>, <busServiceNo>, <time>, <dayOfWeek>
 ```
 
-|  Parameter | Remarks |
-| --- | --- |
-| description | Custom name for this subscription |
-| busStopNo | Bus stop number |
-| busServiceNo | Bus service number |
-| cronExp | A 6-part space separated string  following the format in annex A |
-
-Annex A:
-
-```bash
-<Minutes> <Hours> <Day-of-month> <Month> <Day-of-week> <Year>
-```
-
-| **Field** | **Values** | **Wildcards** |
-| --- | --- | --- |
-| Minutes | 0-59 | , - * / |
-| Hours | 0-23 | , - * / |
-| Day-of-month | 1-31 | , - * ? / L W |
-| Month | 1-12 or JAN-DEC | , - * / |
-| Day-of-week | 1-7 or SUN-SAT | , - * ? L # |
-| Year | 1970-2199 | , - * / |
-
-Source: https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-scheduled-rule-pattern.html
+|  Parameter | Description | Format | Example |
+| --- | --- | --- | --- |
+| description | Custom name for this subscription | text | Go home from office |
+| busStopNo | Bus stop number | 5-digit number | 55039 |
+| busServiceNo | Bus service number | alphanumeric | 86 |
+| time | time in 24hr format  | 4 digit time of day in 24hr format | 1800 |
+| dayOfWeek | Day(s) of week to trigger | 3-letter name of day, or range separated by a “-” | mon OR tue-thu |
 
 ## Unsubscription message
 
