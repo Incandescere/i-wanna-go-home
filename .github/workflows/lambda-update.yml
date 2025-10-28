@@ -2,7 +2,7 @@ name: Lambda update
 
 on: 
   push:
-    branches: ["infra", "lambda"]
+    branches: ["infra"]
 
 permissions:
   id-token: write

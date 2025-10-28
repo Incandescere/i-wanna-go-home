@@ -137,7 +137,7 @@ def handler(event, context):
 # --------------------------------------------------------------------------------------------------------
 
     def subscribe(updateId, chatId, subMsgArr):
-        cronExp = textToCron(submsgarr[3], submsgarr[4])
+        cronExp = textToCron(subMsgArr[3], subMsgArr[4])
         subData = {
             "_id": str(updateId),
             "description": subMsgArr[0],
