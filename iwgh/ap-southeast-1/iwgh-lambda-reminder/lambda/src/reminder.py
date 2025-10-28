@@ -94,7 +94,7 @@ def handler(event, context):
         response = requests.get(
             "https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival",
             params={"BusStopCode": sub['busStopCode'], "ServiceNo": service},
-            headers={"AccountKey": userdata.get('LtaDatamall')},
+            headers={"AccountKey": secrets.get("iwgh-lta-datamall-api-key")},
         )
         for i in busIndex: 
             busArr = response.json()["Services"][0][i]["EstimatedArrival"]
