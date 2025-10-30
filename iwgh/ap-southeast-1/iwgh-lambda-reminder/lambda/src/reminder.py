@@ -95,7 +95,7 @@ def handler(event, context):
         response = requests.get(
             "https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival",
             params={"BusStopCode": sub['busStopCode'], "ServiceNo": service},
-            headers={"AccountKey": userdata.get('LtaDatamall')},
+            headers={"AccountKey": secrets.get("iwgh-lta-datamall-api-key")},
         )
 
         # Failed to find service in subscription
@@ -141,8 +141,6 @@ def handler(event, context):
                 line = line + str(i) + ", "
             line = line[:-2]
             tgMsg = tgMsg + "\n\n" + line
-
-
 
     tgMsg += "\n\nSend \"Unsub, {}\" to unsubscribe".format(sub['_id'])
 
