@@ -87,16 +87,23 @@ def handler(event, context):
     
     sub = getSubById(event["subId"])
 
+    # Get bus arrivals
     pq = []
+    failToFind = []
     busIndex = ["NextBus", "NextBus2", "NextBus3"]
-    #Get next 3 busses for all specified services
     for service in sub["serviceNos"]:
         response = requests.get(
             "https://datamall2.mytransport.sg/ltaodataservice/v3/BusArrival",
             params={"BusStopCode": sub['busStopCode'], "ServiceNo": service},
-            headers={"AccountKey": secrets.get("iwgh-lta-datamall-api-key")},
+            headers={"AccountKey": userdata.get('LtaDatamall')},
         )
-        for i in busIndex: 
+
+        # Failed to find service in subscription
+        if not response.json()["Services"]:
+            failToFind.append(service)
+            continue
+
+        for i in busIndex:
             busArr = response.json()["Services"][0][i]["EstimatedArrival"]
             # case where there is empty bus time
             if not busArr:
@@ -109,26 +116,34 @@ def handler(event, context):
                 continue
             pqObj = {
                 "busService": service,
-                "arrivalTime": arrivalTime, 
+                "arrivalTime": arrivalTime,
                 "arrivalMins": arrivalMins
             }
             # print(pqObj)
-            heapq.heappush(pq, (int(arrivalMins), pqObj))
+            heapq.heappush(pq, (int(arrivalMins), int(service), pqObj))
 
-    print(str(len(pq))+" bus arrivals")
-    #Format message
+    # Format tg msg    
     tgMsg = "{}".format(sub['description'])
     if len(pq) == 0:
         tgMsg = "No more busses"
-    else: 
+    else:
         for i in range(5):
-            nextBus = heapq.heappop(pq)
-            arrivalMins = nextBus[1]["arrivalMins"] if int(nextBus[1]["arrivalMins"]) > 0 else "< 1"
-            line = "{} coming in {} mins ({})".format(nextBus[1]["busService"], arrivalMins, nextBus[1]["arrivalTime"])
+            nextBus = heapq.heappop(pq)[2]
+            arrivalMins = nextBus["arrivalMins"] if int(nextBus["arrivalMins"]) > 0 else "< 1"
+            line = "{} coming in {} mins ({})".format(nextBus["busService"], arrivalMins, nextBus["arrivalTime"])
             tgMsg = tgMsg + "\n" + line
             if len(pq) == 0:
                 break
-        
+
+        if len(failToFind)>0:
+            line = "Could not find bus service(s): "
+            for i in failToFind:
+                line = line + str(i) + ", "
+            line = line[:-2]
+            tgMsg = tgMsg + "\n\n" + line
+
+
+
     tgMsg += "\n\nSend \"Unsub, {}\" to unsubscribe".format(sub['_id'])
 
     # Other req params
