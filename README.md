@@ -93,3 +93,7 @@ Initial release
 ### v1.2 (28 Oct 2025)
 
 1. Updated application from taking in only 1 bus service number to taking in multiple space-separated bus service numbers
+
+### v1.3 (30 Oct 2025)
+
+1. Bug fix to check if service is available at bus stop for reminder function

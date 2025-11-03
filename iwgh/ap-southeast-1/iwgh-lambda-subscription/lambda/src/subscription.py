@@ -139,7 +139,7 @@ def handler(event, context):
     def subscribe(updateId, chatId, subMsgArr):
         cronExp = textToCron(subMsgArr[3], subMsgArr[4])
         # print(cronExp)
-        serviceNos = subMsgArr[2].split()
+        serviceNos = list(set(subMsgArr[2].split()))
         subData = {
             "_id": str(updateId),
             "description": subMsgArr[0],
@@ -219,7 +219,7 @@ def handler(event, context):
         updateId = listItem["update_id"]
         maxOffset = max(maxOffset, updateId)
         chatId = listItem["message"]["chat"]["id"]
-        subMsgArr= listItem["message"]["text"].split(",")
+        subMsgArr = listItem["message"]["text"].split(",")
         subMsgArr = [x.strip() for x in subMsgArr]
 
         # check if msgs are valid sub/unsub reqs
