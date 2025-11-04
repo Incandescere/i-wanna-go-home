@@ -97,3 +97,7 @@ Initial release
 ### v1.3 (30 Oct 2025)
 
 1. Bug fix to check if service is available at bus stop for reminder function
+
+### v1.4 (5 Nov 2025)
+
+1. Bug fix accounting for start message

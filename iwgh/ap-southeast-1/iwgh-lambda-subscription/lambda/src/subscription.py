@@ -202,9 +202,20 @@ def handler(event, context):
         tgUrl = "https://api.telegram.org/bot{}/sendMessage".format(secrets.get("iwgh-telegram-api-key"))
         tgParams = {"chat_id": chatId, "text": tgMsg}
         response = requests.post(tgUrl, params = tgParams)
-        print("InformSubscribeSuccess ok" if response.status_code ==200 else "InformSubscribeSuccess failed")
+        print("InformUnsubscribeSuccess ok" if response.status_code ==200 else "InformUnsubscribeSuccess failed")
 
 # --------------------------------------------------------------------------------------------------------
+
+    def sendWelcomeMsg(chatId):
+        tgMsg = "Welcome to @i_wanna_go_home_bot\n\nTo subscribe, send '<description>, <busStopNo>, <busServiceNos>, <time>, <dayOfWeek>'\n\nFor more information, check out the project GitHub here: https://github.com/Incandescere/i-wanna-go-home"
+        print(tgMsg)
+        tgUrl = "https://api.telegram.org/bot{}/sendMessage".format(secrets.get("iwgh-telegram-api-key"))
+        tgParams = {"chat_id": chatId, "text": tgMsg}
+        response = requests.post(tgUrl, params = tgParams)
+        print("SendWelcomeMsg ok" if response.status_code ==200 else "SendWelcomeMsg failed")
+
+# --------------------------------------------------------------------------------------------------------
+
     #Get list of updates from tele
     secrets = getSecrets()
 
@@ -222,6 +233,11 @@ def handler(event, context):
         subMsgArr = listItem["message"]["text"].split(",")
         subMsgArr = [x.strip() for x in subMsgArr]
 
+        if len(subMsgArr) < 2: 
+            if subMsgArr[0] == '/Start':
+                sendWelcomeMsg(chatId)
+            continue
+        
         # check if msgs are valid sub/unsub reqs
         validSubMsg = len(subMsgArr) == 5
         validUnsubMsg = len(subMsgArr) == 2 and subMsgArr[0] == 'Unsub'
