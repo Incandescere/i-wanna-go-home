@@ -7,6 +7,7 @@ import boto3
 import os
 import json
 
+# Test subscribe pipeline
 # Gets secrets from secrets manager
 def getSecrets():
     # Create a Secrets Manager client
