@@ -57,14 +57,24 @@ jobs:
             --function-name lambda-iwgh-reminder \
             --zip-file fileb://lambda-iwgh-reminder.zip
 
+      # - name: Check if subscription file updated
+      #   id: check_subscription_changed
+      #   run: |
+      #     if git diff --name-only origin/infra -- iwgh/ap-southeast-1/iwgh-lambda-subscription/lambda/src/; then
+      #       echo "changed=true" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "changed=false" >> $GITHUB_OUTPUT
+      #     fi
+      #     echo "Subscription changed: $changed"
+
       - name: Check if subscription file updated
         id: check_subscription_changed
         run: |
-          if git diff --name-only origin/infra -- iwgh/ap-southeast-1/iwgh-lambda-subscription/lambda/src/; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
+          changed=false
+          if [ -n "$(git diff --name-only origin/infra -- iwgh/ap-southeast-1/iwgh-lambda-subscription/lambda/src/)" ]; then
+            changed=true
           fi
+          echo "changed=$changed" >> $GITHUB_OUTPUT
           echo "Subscription changed: $changed"
 
       - name: Update Subscription Lambda
