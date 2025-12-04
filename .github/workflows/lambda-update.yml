@@ -35,6 +35,7 @@ jobs:
           else
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
+          echo "Reminder changed: $changed"
 
       - name: Update Reminder Lambda
         if: steps.check_reminder_changed.outputs.changed == 'true'
@@ -53,6 +54,7 @@ jobs:
           else
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
+          echo "Subscription changed: $changed"
 
       - name: Update Subscription Lambda
         if: steps.check_subscription_changed.outputs.changed == 'true'
