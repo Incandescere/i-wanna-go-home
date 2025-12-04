@@ -27,14 +27,25 @@ jobs:
       - name: Verify AWS identity
         run: aws sts get-caller-identity
 
+      # - name: Check if reminder file updated
+      #   id: check_reminder_changed
+      #   run: |
+      #     if git diff --name-only origin/infra -- iwgh/ap-southeast-1/iwgh-lambda-reminder/lambda/src/; then
+      #       echo "changed=true" >> $GITHUB_OUTPUT
+      #     else
+      #       echo "changed=false" >> $GITHUB_OUTPUT
+      #     fi
+      #     echo "Reminder changed: $changed"
+
       - name: Check if reminder file updated
         id: check_reminder_changed
         run: |
-          if git diff --name-only origin/infra -- iwgh/ap-southeast-1/iwgh-lambda-reminder/lambda/src/; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
+          changed=false
+          # Check if any files in the directory have changed compared to origin/infra
+          if [ -n "$(git diff --name-only origin/infra -- iwgh/ap-southeast-1/iwgh-lambda-reminder/lambda/src/)" ]; then
+            changed=true
           fi
+          echo "changed=$changed" >> $GITHUB_OUTPUT
           echo "Reminder changed: $changed"
 
       - name: Update Reminder Lambda
