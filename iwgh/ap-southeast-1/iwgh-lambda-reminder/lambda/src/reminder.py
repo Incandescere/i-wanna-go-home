@@ -10,7 +10,6 @@ from botocore.exceptions import ClientError
 import json
 import heapq
 
-
 # Gets secrets from secrets manager
 def getSecrets():
     # Create a Secrets Manager client

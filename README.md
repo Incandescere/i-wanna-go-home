@@ -61,11 +61,11 @@ A 5-part comma-separated message
 
 |  Parameter | Description | Format | Example |
 | --- | --- | --- | --- |
-| description | Custom name for this subscription | text | Go home from office |
-| busStopNo | Bus stop number | 5-digit number | 55039 |
-| busServiceNos | Bus service number(s) | 1 bus service number or multiple space-separated bus service numbers at the specified bus stop no | <86> OR <86 163 854>  |
-| time | time in 24hr format  | 4 digit time of day in 24hr format | 1800 |
-| dayOfWeek | Day(s) of week to trigger | 3-letter name of day, or range separated by a “-” | <mon> OR <tue-thu> |
+| description | Custom name for this subscription | string | `Go home from office` |
+| busStopNo | Bus stop number | 5-digit number | `55039` |
+| busServiceNos | Bus service number(s) | 1 bus service number or multiple space-separated bus service numbers at the specified bus stop no | `86` OR `86 163 854`  |
+| time | time in 24hr format  | 4 digit time of day in 24hr format | `1800` |
+| dayOfWeek | Day(s) of week to trigger | 3-letter name of day, or range separated by a “-” | `mon` OR `tue-thu` |
 
 ## Unsubscription message
 
