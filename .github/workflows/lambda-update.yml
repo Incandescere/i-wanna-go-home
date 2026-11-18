@@ -1,8 +1,6 @@
 name: Lambda update
 
 on: 
-  push:
-    branches: ["main"]
   pull_request:
     types: [closed]
     branches: ["main"]
@@ -13,9 +11,9 @@ permissions:
 
 jobs:
   aws:
-    # Only run for direct pushes to main, or PRs that were actually merged
-    # into main. A PR closed without merging must not deploy anything.
-    if: github.event_name == 'push' || github.event.pull_request.merged == true
+    # main is read-only, so every change arrives as a merge. Skip PRs that
+    # were closed without merging.
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
