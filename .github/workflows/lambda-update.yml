@@ -1,8 +1,6 @@
 name: Lambda update
 
 on: 
-  push:
-    branches: ["main"]
   pull_request:
     types: [closed]
     branches: ["main"]
@@ -13,6 +11,9 @@ permissions:
 
 jobs:
   aws:
+    # main is read-only, so every change arrives as a merge. Skip PRs that
+    # were closed without merging.
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:

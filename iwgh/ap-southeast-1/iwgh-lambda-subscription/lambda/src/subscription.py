@@ -50,6 +50,52 @@ def getMongoCollection(secrets):
     return db["iwgh-collection-subscriptions"]
 
 # ========================================================================================================
+# Day-of-week name -> EventBridge Scheduler number (1=SUN ... 7=SAT)
+DAY_MAP = {
+    "SUN": "1", "MON": "2", "TUE": "3", "WED": "4",
+    "THU": "5", "FRI": "6", "SAT": "7",
+}
+
+# Resolve a single day name or number to its cron value (1-7), or None.
+def dayNum(token):
+    if token in DAY_MAP:
+        return int(DAY_MAP[token])
+    if token.isdigit() and 1 <= int(token) <= 7:
+        return int(token)
+    return None
+
+# Expand a single day token ("TUE", "THU-FRI", "MON-WED,FRI") into cron values.
+# Accepts names (case-insensitive) or numbers; ranges are inclusive.
+def expandDayToken(token):
+    token = token.strip().upper()
+    if not token:
+        return []
+
+    if "-" in token:
+        start, _, end = token.partition("-")
+        start, end = start.strip(), end.strip()
+        a, b = dayNum(start), dayNum(end)
+        if a is None or b is None:
+            return []
+        if a <= b:
+            return [str(i) for i in range(a, b + 1)]
+        # wrap-around range, e.g. FRI-TUE
+        return [str(i) for i in range(a, 8)] + [str(i) for i in range(1, b + 1)]
+
+    n = dayNum(token)
+    return [str(n)] if n is not None else []
+
+# Normalise a day-of-week input like "tue thu-fri" into "3,5,6,7".
+# Accepts space/comma separators, names or numbers, ranges with '-'.
+def normaliseDays(days):
+    days = days.strip().upper().replace(",", " ")
+    values = []
+    for token in days.split():
+        values.extend(expandDayToken(token))
+    # de-duplicate, keep ascending order
+    return ",".join(sorted(set(values), key=int))
+
+# ========================================================================================================
 # Convert text to cron exp
 def textToCron(time,days):
     time = time.strip() 
@@ -60,7 +106,11 @@ def textToCron(time,days):
     if len(time) != 4 or (hr<0 or hr>23) or (min<0 or min>59):
         return False
 
-    cronExp = "{} {} ? * {} *".format(min, hr, days)
+    cronDays = normaliseDays(days)
+    if not cronDays:
+        return False
+
+    cronExp = "{} {} ? * {} *".format(min, hr, cronDays)
     return cronExp
 
 # ========================================================================================================
