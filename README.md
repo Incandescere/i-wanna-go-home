@@ -46,7 +46,7 @@ On invocation, the function will:
 # Future Plans
 
 - Error messages to telegram on unsuccessful sub/unsub messages
-- ~~More human-readable cron expression for the subscription message~~
+- ~~More human-readable cron expression for the subscription message~~ (done — see v1.5)
 - Handle the /Start command
 
 # Technical documentation
@@ -65,7 +65,7 @@ A 5-part comma-separated message
 | busStopNo | Bus stop number | 5-digit number | `55039` |
 | busServiceNos | Bus service number(s) | 1 bus service number or multiple space-separated bus service numbers at the specified bus stop no | `86` OR `86 163 854`  |
 | time | time in 24hr format  | 4 digit time of day in 24hr format | `1800` |
-| dayOfWeek | Day(s) of week to trigger | 3-letter name of day, or range separated by a “-” | `mon` OR `tue-thu` |
+| dayOfWeek | Day(s) of week to trigger | 3-letter day name (any case) or number 1-7 (SUN=1), single days, inclusive ranges with `-`, and multiple days space- or comma-separated | `mon` OR `tue-thu` OR `tue thu-fri` OR `sat,sun` |
 
 ## Unsubscription message
 
@@ -101,3 +101,9 @@ Initial release
 ### v1.4 (5 Nov 2025)
 
 1. Bug fix accounting for start message
+
+### v1.5 (18 Nov 2026)
+
+1. `dayOfWeek` now accepts human-readable input instead of raw cron values: day names in any case (`tue`), inclusive ranges (`tue-thu`), and multiple days space- or comma-separated (`tue thu-fri`, `sat,sun`)
+2. Numeric days 1-7 (SUN=1) also accepted
+3. Invalid day input is rejected instead of producing a malformed schedule
