@@ -3,6 +3,9 @@ name: Lambda update
 on: 
   push:
     branches: ["infra"]
+  pull_request:
+    types: [closed]
+    branches: ["infra"]
 
 permissions:
   id-token: write
